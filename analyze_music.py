@@ -3,37 +3,35 @@ import librosa.display
 import numpy as np
 import matplotlib.pyplot as plt
 
-# filename = librosa.example('nutcracker')
-filename = "./sample/Pretend to be.mp3"
+# returns chromagram and chord annotation results
+def analyze_chromagram(y: np.ndarray, sr: int):
+    chromagram = librosa.feature.chroma_cqt(y=y, sr=sr)
 
-y, sr = librosa.load(filename, duration=30)
+    # TODO get chord annotation using libfmp library
 
-# Separate harmonics and percussives into two waveforms
-y_harmonic, y_percussive = librosa.effects.hpss(y)
+    return chromagram
 
-tempo, beat_frames = librosa.beat.beat_track(y=y_percussive, sr=sr)
+def run_feature_extraction(filename: str):
+    # loads an audio file as float ndarray
+    y, sr = librosa.load(filename, duration=12)
 
-# print(beat_frames)
+    # separate harmonics and percussives
+    y_harmonic, y_percussive = librosa.effects.hpss(y)
 
-# estimate tempo
-print('Estimated tempo: {:.2f} beats per minute'.format(tempo))
+    tempo, _ = librosa.beat.beat_track(y=y_percussive, sr=sr)
 
-# 4. Convert the frame indices of beat events into timestamps
-beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+    # compute chromagram
+    chromagram = analyze_chromagram(y=y_harmonic, sr=sr)
 
-# print(beat_times)
+    # plot pitch information 
+    fig, ax = plt.subplots(nrows=2, sharex=True, sharey=True)
+    img = librosa.display.specshow(chromagram, y_axis='chroma', x_axis='time', ax=ax[0])
+    ax[0].set(title='chroma')
+    ax[0].label_outer()
 
-# compute chromagram
-chromagram = librosa.feature.chroma_cqt(y=y_harmonic, sr=sr)
+    fig.colorbar(img, ax=ax)
 
-# print(chromagram)
+    plt.show()
 
-# plot pitch information 
-fig, ax = plt.subplots(nrows=2, sharex=True, sharey=True)
-img = librosa.display.specshow(chromagram, y_axis='chroma', x_axis='time', ax=ax[0])
-ax[0].set(title='chroma')
-ax[0].label_outer()
-
-fig.colorbar(img, ax=ax)
-
-plt.show()
+# testing
+run_feature_extraction("./sample/pretend-to-be.mp3")
