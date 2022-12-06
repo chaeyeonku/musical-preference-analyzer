@@ -36,11 +36,37 @@ def analyze_chromagram(X_CQT, Fs_X, x, Fs, x_dur):
     plt.tight_layout()
     plt.show()
 
+def analyze_tempo(filename: str):
+    y, sr = librosa.load(filename)
+
+    temp, beats = librosa.beat.beat_track(y=y, sr=sr)
+
+    onset_env = librosa.onset.onset_strength(y=y, sr=sr, aggregate=np.median)
+
+    hop_length = 512
+    fig, ax = plt.subplots(nrows=2, sharex=True)
+    times = librosa.times_like(onset_env, sr=sr, hop_length=hop_length)
+    M = librosa.feature.melspectrogram(y=y, sr=sr, hop_length=hop_length)
+    librosa.display.specshow(librosa.power_to_db(M, ref=np.max),
+                            y_axis='mel', x_axis='time', hop_length=hop_length,
+                            ax=ax[0])
+    ax[0].label_outer()
+    ax[0].set(title='Mel spectrogram')
+    ax[1].plot(times, librosa.util.normalize(onset_env),
+            label='Onset strength')
+    ax[1].vlines(times[beats], 0, 1, alpha=0.5, color='r',
+            linestyle='--', label='Beats')
+    ax[1].legend()
+
+    plt.show()
+
 def run_feature_extraction(filename: str):
     # load audio from file
     X_CQT, Fs_X, x, Fs, x_dur = libfmp.c5.compute_chromagram_from_filename(filename, N=4096, H=2048, version="CQT")
 
     analyze_chromagram(X_CQT, Fs_X, x, Fs, x_dur)
+
+    analyze_tempo(filename)
 
 # testing
 run_feature_extraction("./sample/pretend-to-be.wav")
