@@ -6,14 +6,14 @@ import libfmp.c5
 import libfmp.b
 
 # returns chromagram and chord recognition results
-def analyze_chromagram(X_CQT, Fs_X, x, Fs, x_dur):
+def analyze_chromagram(X_CQT, x, Fs, name):
 
     # chord recognition
-    chord_sim, chord_max = libfmp.c5.chord_recognition_template(X_CQT, norm_sim="max")
+    _, chord_max = libfmp.c5.chord_recognition_template(X_CQT, norm_sim="max")
     chord_labels = libfmp.c5.get_chord_labels()
 
     # figure settings
-    fig, ax = plt.subplots(3, 2, gridspec_kw={'width_ratios': [1, 0.03], 
+    _, ax = plt.subplots(3, 2, gridspec_kw={'width_ratios': [1, 0.03], 
                                             'height_ratios': [1, 1, 2]}, figsize=(9, 6))
 
     # plot waveform
@@ -34,17 +34,17 @@ def analyze_chromagram(X_CQT, Fs_X, x, Fs, x_dur):
     ax[2, 0].grid()
 
     plt.tight_layout()
-    plt.show()
+    plt.savefig('./flaskr/images/chroma/' + name + '.png')
 
-def analyze_tempo(filename: str):
+def analyze_tempo(filename: str, name: str):
     y, sr = librosa.load(filename)
 
-    temp, beats = librosa.beat.beat_track(y=y, sr=sr)
+    _, beats = librosa.beat.beat_track(y=y, sr=sr)
 
     onset_env = librosa.onset.onset_strength(y=y, sr=sr, aggregate=np.median)
 
     hop_length = 512
-    fig, ax = plt.subplots(nrows=2, sharex=True)
+    _, ax = plt.subplots(nrows=2, sharex=True)
     times = librosa.times_like(onset_env, sr=sr, hop_length=hop_length)
     M = librosa.feature.melspectrogram(y=y, sr=sr, hop_length=hop_length)
     librosa.display.specshow(librosa.power_to_db(M, ref=np.max),
@@ -58,15 +58,16 @@ def analyze_tempo(filename: str):
             linestyle='--', label='Beats')
     ax[1].legend()
 
-    plt.show()
+    plt.savefig('./flaskr/images/tempo/' + name + '.png')
 
-def run_feature_extraction(filename: str):
+def run_feature_extraction(filename: str, name: str):
     # load audio from file
-    X_CQT, Fs_X, x, Fs, x_dur = libfmp.c5.compute_chromagram_from_filename(filename, N=4096, H=2048, version="CQT")
+    X_CQT, _, x, Fs, _ = libfmp.c5.compute_chromagram_from_filename(filename, N=4096, H=2048, version="CQT")
 
-    analyze_chromagram(X_CQT, Fs_X, x, Fs, x_dur)
+    analyze_chromagram(X_CQT, x, Fs, name)
 
-    analyze_tempo(filename)
+    analyze_tempo(filename, name)
 
 # testing
-run_feature_extraction("./sample/pretend-to-be.wav")
+run_feature_extraction(filename="./flaskr/sample/pretend-to-be.wav", name="Pretend to be")
+run_feature_extraction(filename="./flaskr/sample/Poker.wav", name="Poker")

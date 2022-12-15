@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h3>{% block title %}Music Analyzer{% endblock %}</h3>
+{% endblock %}
+
+{% block content %}
+  <label for="songs">Choose a song:</label>
+
+  <select name="songs" id="songs">
+    <option value="poker">Poker</option>
+    <option value="pretend-to-be">Pretend to be</option>
+  </select>
+{% endblock %}
